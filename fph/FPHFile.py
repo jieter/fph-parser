@@ -1,27 +1,13 @@
-#!/usr/bin/env python2.7
-
 # Fisher and Paykel CPAP .FPH file parser.
 #
+# Jan Pieter Waagmeester <jieter@jieter.nl>
+#
+# File format source:
 # http://sourceforge.net/apps/mediawiki/sleepyhead/index.php?title=Icon
-#
-# Done: SUM*.fph files.
-#
 
 from struct import calcsize, unpack
 from collections import namedtuple
 from datetime import datetime
-
-def parseFile(filename):
-	parts = filename.split('/')
-
-	prefix = parts[-1][0:3]
-
-	if (prefix == 'SUM'):
-		return SummaryFile(filename)
-	else:
-		return FPHFile(filename)
-
-
 
 class FPHFile:
 	FPH_MAGIC_NUMBER = '0201'
@@ -41,7 +27,7 @@ class FPHFile:
 
 	CSV_SEPARATOR = ';'
 
-	records = None
+	records = []
 
 	def __init__(self, filename):
 		with open(filename, 'rb') as f:
@@ -82,69 +68,10 @@ class FPHFile:
 	def _parseDuration(self, raw):
 		return raw * 3.6
 
-	def toCSV(self):
-		pass
-
-	def __str__(self, showHeader=False):
-		ret = ''
-		if (showHeader):
-			ret += str(self.header) + '\n'
-
-		if (self.records and len(self.records) > 0):
-			ret += self.CSV_SEPARATOR.join(self.records[0]._fields) + '\n'
-			ret += '\n'.join([self.CSV_SEPARATOR.join(map(str, r)) for r in self.records])
-
-		return ret
-
-
-class SummaryFile(FPHFile):
-
-	SUMMARY_RECORD_SIZE = 0x1d
-	SUMMARY_RECORD = (
-		('timestamp', '4s'),
-		('runtime', 'B'),
-		('usage', 'B'),
-		('_', '7s'),
-		('leak90', 'H'),
-		('lowPressure', 'B'),
-		('highPressure', 'B'),
-		('_', 's'),
-		('apneaEvents', 'B'),
-		('hypoapneaEvents', 'B'),
-		('flowlimitiationEvents', 'B'),
-		('_', '3s'),
-		('pressure1', 'B'),
-		('pressure2', 'B'),
-		('_', '2s'),
-		('humiditySetting', 'B')
-	)
-
-	SummaryRecord = namedtuple('SummaryRecord',
-		[x[0] for x in SUMMARY_RECORD if x[0] != '_']
-	)
-
-	def _parseBody(self):
-		f = self.raw
-		f.seek(self.HEADER_SIZE)
-
-		record = f.read(self.SUMMARY_RECORD_SIZE)
-		self.records = []
-
-		for i in range(8):
-			self.records.append(self._parseRecord(record))
-			record = f.read(self.SUMMARY_RECORD_SIZE)
-
-	def _parseRecord(self, record):
-
-		transforms = {
-			'timestamp': self._parseTimestamp,
-			'runtime': self._parseDuration,
-			'usage': self._parseDuration
-		}
-
+	def _parseRecord(self, format_tuple, record, transforms={}):
 		offset = 0
 		values = []
-		for (name, format) in self.SUMMARY_RECORD:
+		for (name, format) in format_tuple:
 			format = '<' + format
 			size = calcsize(format)
 			raw = record[offset:(offset + size)]
@@ -158,9 +85,18 @@ class SummaryFile(FPHFile):
 
 			offset += size
 
-		return self.SummaryRecord._make(values)
+		return values
 
+	def toCSV(self):
+		pass
 
+	def __str__(self, showHeader=False):
+		ret = ''
+		if (showHeader):
+			ret += str(self.header) + '\n'
 
+		if (self.records and len(self.records) > 0):
+			ret += self.CSV_SEPARATOR.join(self.records[0]._fields) + '\n'
+			ret += '\n'.join([self.CSV_SEPARATOR.join(map(str, r)) for r in self.records])
 
-
+		return ret

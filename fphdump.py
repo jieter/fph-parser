@@ -4,13 +4,13 @@
 # Fisher and Paykel CPAP .FPH file parser.
 # http://sourceforge.net/apps/mediawiki/sleepyhead/index.php?title=Icon
 
-from fph.fphfile import parseFile
 import sys
+from fph.parseFile import parseFile
 
 if __name__ == "__main__":
 	args = sys.argv
 
-	if args[1]:
+	if len(args) > 1 and args[1]:
 		filename = args[1];
 
 		print parseFile(filename)
