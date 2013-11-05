@@ -69,6 +69,7 @@ class FPHFile:
 
 		return datetime(year, month, day, hour, minute, second)
 
+	# duration to seconds
 	def _parseDuration(self, raw):
 		return raw * 360
 

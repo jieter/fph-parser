@@ -7,6 +7,7 @@
 
 from collections import namedtuple
 from struct import calcsize, unpack
+from datetime import timedelta
 
 from FPHFile import FPHFile
 
@@ -73,7 +74,11 @@ class DetailFile(FPHFile):
 					f.read(self.DETAIL_RECORD_SIZE),
 					transforms
 				)
-				self.records.append(self.DetailRecord._make([timestamp] + values))
+				self.records.append(
+					self.DetailRecord._make(
+						[timestamp + timedelta(minutes = (2 * i))] + values
+					)
+				)
 
 
 

@@ -57,7 +57,7 @@ class SummaryFile(FPHFile):
 			)
 
 class SleepsSummary(FPHFile):
-	def __init__(self, summaryFile, split_threshold = 4):
+	def __init__(self, summaryFile, split_threshold = 2):
 		self.split_threshold = split_threshold
 
 		self.header = summaryFile.header
