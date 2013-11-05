@@ -23,6 +23,8 @@ class FPHFile:
 		('model', 5)
 	]
 
+	END_OF_DATA = '\xFE\xFA'
+
 	Header = namedtuple('Header', [x[0] for x in HEADER_OFFSETS])
 
 	CSV_SEPARATOR = ';'
@@ -46,8 +48,10 @@ class FPHFile:
 			raise self.FPH_MAGIC_NUMBER + " magic number not found"
 
 		# last byte (fields[6][-1]) contains a checksum,
-		# TODO figure out how to calculate it and check.
-
+		#
+		# TODO implement checksum
+		# https://github.com/kearygriffin/sleepyhead/blob/master/SleepLib/loader_plugins/icon_loader.cpp#L658
+		#
 		return self.Header._make(
 			[fields[offset] for name, offset in self.HEADER_OFFSETS]
 		)
@@ -66,7 +70,7 @@ class FPHFile:
 		return datetime(year, month, day, hour, minute, second)
 
 	def _parseDuration(self, raw):
-		return raw * 3.6
+		return raw * 360
 
 	def _parseRecord(self, format_tuple, record, transforms={}):
 		offset = 0
@@ -88,15 +92,20 @@ class FPHFile:
 		return values
 
 	def toCSV(self):
-		pass
+		if (self.records):
+			return records2csv(self.records)
 
-	def __str__(self, showHeader=False):
-		ret = ''
-		if (showHeader):
-			ret += str(self.header) + '\n'
 
-		if (self.records and len(self.records) > 0):
-			ret += self.CSV_SEPARATOR.join(self.records[0]._fields) + '\n'
-			ret += '\n'.join([self.CSV_SEPARATOR.join(map(str, r)) for r in self.records])
-
+	def __str__(self):
+		ret = str(self.header) + '\n'
+		ret += self.toCSV()
 		return ret
+
+
+def records2csv(it, separator = ';'):
+	csv = ''
+	if (len(it) > 0):
+		csv += separator.join(it[0]._fields) + '\n'
+		csv += '\n'.join([separator.join(map(str, r)) for r in it])
+
+	return csv

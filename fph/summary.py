@@ -6,9 +6,10 @@
 # http://sourceforge.net/apps/mediawiki/sleepyhead/index.php?title=Icon
 
 from collections import namedtuple
-import FPHFile
+from datetime import timedelta
+from FPHFile import FPHFile
 
-class SummaryFile(FPHFile.FPHFile):
+class SummaryFile(FPHFile):
 
 	SUMMARY_RECORD_SIZE = 0x1d
 	SUMMARY_RECORD = (
@@ -46,7 +47,7 @@ class SummaryFile(FPHFile.FPHFile):
 
 		while (True):
 			record = f.read(self.SUMMARY_RECORD_SIZE)
-			if record[0:2] == '\xFE\xFA':
+			if record[0:2] == self.END_OF_DATA:
 				break
 
 			self.records.append(
@@ -54,3 +55,37 @@ class SummaryFile(FPHFile.FPHFile):
 					self._parseRecord(self.SUMMARY_RECORD, record, transforms)
 				)
 			)
+
+class SleepsSummary(FPHFile):
+	def __init__(self, summaryFile, split_threshold = 4):
+		self.split_threshold = split_threshold
+
+		self.header = summaryFile.header
+		self.records = self._group(summaryFile)
+
+	def _group(self, summaryFile):
+		sleeps = []
+		end = None
+
+		keys = 'runtime apneaEvents hypoapneaEvents flowlimitiationEvents'.split(' ')
+
+		Sleep = namedtuple('Sleep', ['timestamp'] + keys)
+		make = lambda start, values: Sleep._make([start] + values)
+
+		for s in summaryFile.records:
+			start = s.timestamp
+			if (end is None or end + timedelta(hours = self.split_threshold) < start):
+				if (end is not None):
+					sleeps.append(make(start, sleep))
+
+				sleep = [0] * len(keys)
+
+			for i, k in enumerate(keys):
+				sleep[i] += getattr(s, k)
+
+			end = start + timedelta(seconds = s.runtime)
+
+		# also add last one
+		sleeps.append(make(start, sleep))
+
+		return sleeps
