@@ -6,7 +6,7 @@
 # http://sourceforge.net/apps/mediawiki/sleepyhead/index.php?title=Icon
 
 from collections import namedtuple
-from datetime import timedelta
+from datetime import timedelta, datetime
 from FPHFile import FPHFile
 
 class SummaryFile(FPHFile):
@@ -76,9 +76,10 @@ class SleepsSummary(FPHFile):
 			start = s.timestamp
 			if (end is None or end + timedelta(hours = self.split_threshold) < start):
 				if (end is not None):
-					sleeps.append(make(start, sleep))
+					sleeps.append(make(first, sleep))
 
 				sleep = [0] * len(keys)
+				first = start
 
 			for i, k in enumerate(keys):
 				sleep[i] += getattr(s, k)
@@ -86,6 +87,6 @@ class SleepsSummary(FPHFile):
 			end = start + timedelta(seconds = s.runtime)
 
 		# also add last one
-		sleeps.append(make(start, sleep))
+		sleeps.append(make(first, sleep))
 
 		return sleeps
