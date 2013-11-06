@@ -23,11 +23,9 @@ class FPHFile:
 		('model', 5)
 	]
 
-	END_OF_DATA = '\xFE\xFA'
-
 	Header = namedtuple('Header', [x[0] for x in HEADER_OFFSETS])
 
-	CSV_SEPARATOR = ';'
+	CSV_SEPARATOR = ','
 
 	records = []
 
@@ -96,10 +94,10 @@ class FPHFile:
 		if (self.records):
 			return records2csv(self.records)
 
-
 	def __str__(self):
 		ret = str(self.header) + '\n'
-		ret += self.toCSV()
+		if (self.records):
+			ret += self.toCSV(self.CSV_SEPARATOR)
 		return ret
 
 

@@ -2,6 +2,8 @@
 
 Currently only works for `SUM****.FPH` and `DET****.FPH`
 
+File format description from [sleepyhead wiki](http://sourceforge.net/apps/mediawiki/sleepyhead/index.php?title=Icon)
+
 ### Dump CPAP sessions
 ```
 $ ./dumpcsv.py data/SUM0001.FPH

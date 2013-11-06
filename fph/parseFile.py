@@ -8,6 +8,7 @@
 import FPHFile
 from summary import SummaryFile
 from detail import DetailFile
+from flow import FlowFile
 
 def parseFile(filename):
 	parts = filename.split('/')
@@ -18,5 +19,7 @@ def parseFile(filename):
 		return SummaryFile(filename)
 	elif (prefix == 'DET'):
 		return DetailFile(filename)
+	elif (prefix == 'FLW'):
+		return FlowFile(filename)
 	else:
 		return FPHFile(filename)

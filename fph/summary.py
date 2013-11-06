@@ -11,6 +11,8 @@ from FPHFile import FPHFile
 
 class SummaryFile(FPHFile):
 
+	END_OF_DATA = '\xFE\xFA'
+
 	SUMMARY_RECORD_SIZE = 0x1d
 	SUMMARY_RECORD = (
 		('timestamp', '4s'),
@@ -45,7 +47,7 @@ class SummaryFile(FPHFile):
 			'usage': self._parseDuration
 		}
 
-		while (True):
+		while True:
 			record = f.read(self.SUMMARY_RECORD_SIZE)
 			if record[0:2] == self.END_OF_DATA:
 				break
@@ -72,9 +74,11 @@ class SleepsSummary(FPHFile):
 		Sleep = namedtuple('Sleep', ['timestamp'] + keys)
 		make = lambda start, values: Sleep._make([start] + values)
 
+		threshold = timedelta(hours = self.split_threshold)
+
 		for s in summaryFile.records:
 			start = s.timestamp
-			if (end is None or end + timedelta(hours = self.split_threshold) < start):
+			if (end is None or end + threshold < start):
 				if (end is not None):
 					sleeps.append(make(first, sleep))
 
