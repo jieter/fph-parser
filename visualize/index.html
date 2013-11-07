@@ -132,13 +132,10 @@ d3.csv('summary.csv', type, function(error, data) {
 			var mins = Math.floor((r - hour) * 60);
 			return hour + ':' + (mins < 10 ? '0' : '') + mins;
 		});
-
-
-
 });
 
 function type(d) {
-	var date = new Date(Date.parse(d.timestamp) + 12 * 60 * 60 * 1000);
+	var date = new Date(Date.parse(d.timestamp) + 13 * 60 * 60 * 1000);
 
 	d.day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 	d.startTime = (
