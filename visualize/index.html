@@ -78,7 +78,7 @@ var svg = d3.select('body').append('svg')
 d3.csv('summary.csv', type, function(error, data) {
 
 	x.domain([data[0].timestamp, data[data.length - 1].timestamp]).nice();
-	y.domain([24.5 * 60 * 60, 0]);
+	y.domain([25 * 60 * 60, 0]);
 
 	// horizontal lines
 	svg.append('g').attr('class', 'vline')
@@ -134,8 +134,9 @@ d3.csv('summary.csv', type, function(error, data) {
 		});
 });
 
+var timeFormat = d3.time.format('%Y-%m-%d %H:%M:%S');
 function type(d) {
-	var date = new Date(Date.parse(d.timestamp) + 13 * 60 * 60 * 1000);
+	var date = new Date(timeFormat.parse(d.timestamp) - 11 * 60 * 60 * 1000);
 
 	d.day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 	d.startTime = (

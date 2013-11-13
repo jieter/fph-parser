@@ -92,12 +92,12 @@ class FPHFile:
 
 	def toCSV(self):
 		if (self.records):
-			return records2csv(self.records)
+			return records2csv(self.records, self.CSV_SEPARATOR)
 
 	def __str__(self):
 		ret = str(self.header) + '\n'
 		if (self.records):
-			ret += self.toCSV(self.CSV_SEPARATOR)
+			ret += self.toCSV()
 		return ret
 
 
