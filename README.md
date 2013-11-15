@@ -1,4 +1,5 @@
-# Convert Fisher & Paykel .FPH parser
+## Fisher & Paykel Icon .FPH parser
+
 
 Currently only works for `SUM****.FPH` and `DET****.FPH`
 
