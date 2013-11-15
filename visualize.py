@@ -18,7 +18,5 @@ def lastLog():
 
 f = parseFile('data/' + lastLog() + '/SUM0001.FPH')
 
-
-
-w = open('visualize/summary.csv', 'w')
+w = open('site/summary.csv', 'w')
 w.write(f.toCSV())

@@ -44,7 +44,6 @@ var margin = {top: 20, right: 20, bottom: 30, left: 40},
 	width = Math.min(800, window.innerWidth)  - margin.left - margin.right,
 	height = 500 - margin.top - margin.bottom;
 
-var barWidth = 35;
 
 var HOUR = 60 * 60;
 
@@ -57,7 +56,9 @@ var xAxis = d3.svg.axis()
 		.ticks(d3.time.day, 1)
 		.tickFormat(d3.time.format('%a %d'));
 
-var yTicks = [16, 18, 20, 22, 0, 2, 4, 6, 8].map(function (d) { return ((d + 12) % 24) * HOUR; });
+var yTicks = [16, 18, 20, 22, 0, 2, 4, 6, 8].map(function (d) {
+	return ((d + 12) % 24) * HOUR;
+});
 var yAxis = d3.svg.axis()
 		.scale(y)
 		.orient('left')
@@ -80,6 +81,13 @@ d3.csv('summary.csv', type, function(error, data) {
 	x.domain([data[0].timestamp, data[data.length - 1].timestamp]).nice();
 	y.domain([25 * 60 * 60, 0]);
 
+	// calculate nice bar width for graph width
+	var xd = x.domain();
+	var barWidth = Math.min(
+		Math.floor(width / d3.time.days(xd[0], xd[1]).length * 0.8),
+		30
+	);
+
 	// horizontal lines
 	svg.append('g').attr('class', 'vline')
 		.selectAll(".vline")
@@ -91,21 +99,23 @@ d3.csv('summary.csv', type, function(error, data) {
 				.attr("x1", function (d) { return 0; })
 				.attr("x2", function (d) { return width; });
 
+	// x axis
 	svg.append('g')
 		.attr('class', 'x axis')
 		.attr('transform', 'translate(0,' + height + ')')
 			.call(xAxis);
 
+	// y axis
 	svg.append('g')
 			.attr('class', 'y axis')
 			.call(yAxis);
 
+	// the bars
 	var bar = svg.selectAll('.bar')
 		.data(data)
 			.enter()
 				.append('g')
 				.attr('class', 'bar');
-
 	bar.append('rect')
 		.attr('x', function(d) { return x(d.day); })
 			.attr('width', barWidth)
@@ -129,6 +139,10 @@ d3.csv('summary.csv', type, function(error, data) {
 				return '';
 			}
 			var hour = Math.floor(r);
+
+			if (barWidth < 20) {
+				return hour;
+			}
 			var mins = Math.floor((r - hour) * 60);
 			return hour + ':' + (mins < 10 ? '0' : '') + mins;
 		});
