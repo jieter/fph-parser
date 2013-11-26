@@ -31,7 +31,7 @@ def copyUSB():
 
 def lastLog():
 	os.chdir('data/')
-	files = os.listdir('.')
+	files = filter(os.path.isdir, os.listdir('.'))
 	files.sort(reverse=True)
 	os.chdir('../')
 	return files[0]

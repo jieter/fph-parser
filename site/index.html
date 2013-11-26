@@ -26,6 +26,10 @@
 		.bar text {
 		  fill: #fff;
 		}
+
+		.sum {
+			fill: #f88;
+		}
 		.vline line {
 			stroke: #eee;
 		}
@@ -37,15 +41,16 @@
 <body>
 
 <h2>CPAP sessies</h2>
+
 <script src="http://d3js.org/d3.v3.js"></script>
 <script>
 
 var margin = {top: 20, right: 20, bottom: 30, left: 40},
-	width = Math.min(800, window.innerWidth)  - margin.left - margin.right,
+	width = Math.min(1000, window.innerWidth)  - margin.left - margin.right,
 	height = 500 - margin.top - margin.bottom;
 
-
 var HOUR = 60 * 60;
+var dayFormatter = d3.time.format('%a %d');
 
 var x = d3.time.scale().range([10, width]);
 var y = d3.scale.linear().range([height, 0]);
@@ -54,7 +59,13 @@ var xAxis = d3.svg.axis()
 		.scale(x)
 		.orient('bottom')
 		.ticks(d3.time.day, 1)
-		.tickFormat(d3.time.format('%a %d'));
+		.tickFormat(function (t) {
+			if (t.getDay() == 0) {
+				return dayFormatter(t);
+			} else {
+				return '';
+			}
+		});
 
 var yTicks = [16, 18, 20, 22, 0, 2, 4, 6, 8].map(function (d) {
 	return ((d + 12) % 24) * HOUR;
@@ -77,7 +88,6 @@ var svg = d3.select('body').append('svg')
 		.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
 d3.csv('summary.csv', type, function(error, data) {
-
 	x.domain([data[0].timestamp, data[data.length - 1].timestamp]).nice();
 	y.domain([25 * 60 * 60, 0]);
 
@@ -116,14 +126,12 @@ d3.csv('summary.csv', type, function(error, data) {
 			.enter()
 				.append('g')
 				.attr('class', 'bar');
+
 	bar.append('rect')
 		.attr('x', function(d) { return x(d.day); })
-			.attr('width', barWidth)
-			.attr('y', function(d) { return y(d.startTime); })
-			.attr('height', function(d) { return y(d.runtime); })
-			.attr('title', function(d) {
-				return d.runtime / 60;
-			})
+		.attr('width', barWidth)
+		.attr('y', function(d) { return y(d.startTime); })
+		.attr('height', function(d) { return y(d.runtime); });
 
 	// bar labels
 	bar.append('text')
@@ -135,26 +143,94 @@ d3.csv('summary.csv', type, function(error, data) {
 		.attr('text-anchor', 'middle')
 		.text(function(d) {
 			var r = d.runtime / 60 / 60;
-			if (r < 0.75) {
+			if (r < 1) {
 				return '';
 			}
 			var hour = Math.floor(r);
 
-			if (barWidth < 20) {
+			if (barWidth < 22) {
 				return hour;
 			}
 			var mins = Math.floor((r - hour) * 60);
 			return hour + ':' + (mins < 10 ? '0' : '') + mins;
 		});
+
+	// sum total apnea-events per day and display.
+	var perDay = {};
+	data.forEach(function (session) {
+		if (!(session.day in perDay)) {
+			perDay[session.day] = {
+				runtime: 0,
+				apneaEvents: 0,
+				hypoapneaEvents: 0
+			};
+		}
+		console.log(session)
+		perDay[session.day].apneaEvents += session.apneaEvents;
+		perDay[session.day].hypoapneaEvents += session.hypoapneaEvents;
+		perDay[session.day].runtime += session.runtime;
+	});
+	var dayData = [];
+	for(var day in perDay) {
+		dayData.push({
+			day: Date.parse(day),
+			apneaEvents: perDay[day].apneaEvents,
+			hypoapneaEvents: perDay[day].hypoapneaEvents,
+			runtime: perDay[day].runtime
+		});
+	};
+
+
+	var sums = svg.selectAll('.sum')
+	 	.data(dayData)
+	 		.enter()
+	 			.append('text')
+		 			.attr('class', 'sum')
+		 			.attr('width', barWidth)
+		 			.attr('height', 20)
+		 			.attr('y', y(7.8 * HOUR))
+		 			.attr('x', function (d) { return x(d.day); })
+	 				.attr('dx', barWidth / 3)
+		 			.text(function (d) {
+		 				var ahi = (d.apneaEvents + d.hypoapneaEvents) / (d.runtime / 60 / 60);
+
+		 				return Math.round(ahi * 10) / 10;
+
+	 				});
+
+	svg.selectAll('.datalabels')
+		.data([
+			{y: 7.8, text: 'AHI'}
+//			{y: 6.8, text: 'runtime'}
+		])
+		.enter()
+			.append('text')
+				.attr('class', 'datalables')
+				.attr('y', function (d) { return y(d.y * HOUR); })
+				.attr('x', 5)
+				.text(function (d) {
+					return d.text + ':';
+				});
+	var tableData = [
+		['Nachten met CPAP', sums.length]
+	];
+
+	var table = d3.select('body')
+		.append('table')
+			.data(tableData)
+				.enter()
+					.append('tr');
+
 });
 
 var timeFormat = d3.time.format('%Y-%m-%d %H:%M:%S');
 function type(d) {
+	d.apneaEvents = +d.apneaEvents;
+	d.hypoapneaEvents = +d.hypoapneaEvents;
 	var date = new Date(timeFormat.parse(d.timestamp) - 11 * 60 * 60 * 1000);
-
 	d.day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 	d.startTime = (
-		date.getHours() * 60 * 60 +
+		date.getHours() * HOUR +
 		date.getMinutes() * 60 +
 		date.getSeconds()
 	);
