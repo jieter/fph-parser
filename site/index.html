@@ -46,7 +46,7 @@
 <script>
 
 var margin = {top: 20, right: 20, bottom: 30, left: 40},
-	width = Math.min(1000, window.innerWidth)  - margin.left - margin.right,
+	width = Math.min(1300, window.innerWidth)  - margin.left - margin.right,
 	height = 500 - margin.top - margin.bottom;
 
 var HOUR = 60 * 60;
@@ -195,7 +195,6 @@ d3.csv('summary.csv', type, function(error, data) {
 		 				var ahi = (d.apneaEvents + d.hypoapneaEvents) / (d.runtime / 60 / 60);
 
 		 				return Math.round(ahi * 10) / 10;
-
 	 				});
 
 	svg.selectAll('.datalabels')
